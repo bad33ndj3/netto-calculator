@@ -2,7 +2,9 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Netto Kinderopvang Calculator 2026</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +14,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; background-color: #f0fdf4; } 
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #f0fdf4; -webkit-tap-highlight-color: transparent; } 
         .neobrutalism {
             border: 3px solid #000;
             box-shadow: 5px 5px 0px #000;
@@ -24,8 +26,17 @@
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
+            height: 24px;
+            width: 24px;
+            background: #000;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
             background: #000;
             cursor: pointer;
             border-radius: 50%;
@@ -35,102 +46,106 @@
         input[type="range"] {
             accent-color: black; 
         }
+        /* Mobile Input Fix */
+        input[type="number"], input[type="text"] {
+            font-size: 16px; /* Prevents iOS zoom */
+        }
     </style>
 </head>
-<body class="p-4 md:p-8 text-black bg-emerald-50 max-w-7xl mx-auto">
+<body class="p-4 md:p-8 text-black bg-emerald-50 max-w-7xl mx-auto pb-20">
     <div id="app">
-        <header class="mb-8 border-b-4 border-black pb-4 flex justify-between items-center">
+        <header class="mb-6 md:mb-8 border-b-4 border-black pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-3xl md:text-5xl font-bold uppercase tracking-tight">🇳🇱 Netto Calculator 2026</h1>
-                <p class="text-xl font-medium mt-2">Inkomstenbelasting & Kinderopvangtoeslag</p>
+                <h1 class="text-3xl md:text-5xl font-bold uppercase tracking-tight leading-tight">🇳🇱 Netto Calculator 2026</h1>
+                <p class="text-lg md:text-xl font-medium mt-1 md:mt-2">Inkomstenbelasting & Kinderopvangtoeslag</p>
             </div>
-            <button @click="resetDefaults" class="hidden md:block text-xs font-bold underline hover:text-red-600">Reset Instellingen</button>
+            <button @click="resetDefaults" class="text-sm font-bold underline hover:text-red-600 self-end md:self-auto">Reset Instellingen</button>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
             <!-- Left Column: Inputs -->
-            <div class="lg:col-span-4 space-y-8">
+            <div class="lg:col-span-4 space-y-6 md:space-y-8">
                 
                 <!-- Parent 1 -->
-                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
-                    <h2 class="text-2xl font-bold mb-4 bg-yellow-300 inline-block px-2 border-2 border-black transform -rotate-1">Ouder 1</h2>
+                <div class="bg-white p-5 md:p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 bg-yellow-300 inline-block px-2 border-2 border-black transform -rotate-1">Ouder 1</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block font-bold mb-1">Bruto Salaris (Basis 40u)</label>
-                            <input type="number" v-model.number="parent1.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-yellow-50" placeholder="e.g. 5000">
+                            <label class="block font-bold mb-1 text-sm md:text-base">Bruto Salaris (Basis 40u)</label>
+                            <input type="number" v-model.number="parent1.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-yellow-50 text-lg" placeholder="e.g. 5000">
                         </div>
                         <div class="bg-yellow-50 p-2 border border-black text-sm italic">
                             <span class="font-bold">→ Werkelijk Bruto:</span> € {{ formatMoney(getActualSalary(parent1)) }}
                         </div>
 
-                        <div class="flex items-center gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="parent1.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black">
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer p-1">
+                                <input type="checkbox" v-model="parent1.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black rounded-none">
                                 <span class="font-bold">8% Vakantiegeld</span>
                             </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="parent1.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black">
+                            <label class="flex items-center gap-2 cursor-pointer p-1">
+                                <input type="checkbox" v-model="parent1.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black rounded-none">
                                 <span class="font-bold">13e Maand</span>
                             </label>
                         </div>
                         <div>
-                            <label class="block font-bold mb-1">Werkdagen per week</label>
+                            <label class="block font-bold mb-1 text-sm md:text-base">Werkdagen per week</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" v-model.number="parent1.days" min="0" max="5" step="0.5" class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
-                                <input type="number" v-model.number="parent1.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center">
+                                <input type="range" v-model.number="parent1.days" min="0" max="5" step="0.5" class="flex-grow h-8 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
+                                <input type="number" v-model.number="parent1.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center text-lg">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Parent 2 -->
-                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
-                    <h2 class="text-2xl font-bold mb-4 bg-cyan-300 inline-block px-2 border-2 border-black transform rotate-1">Ouder 2</h2>
+                <div class="bg-white p-5 md:p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 bg-cyan-300 inline-block px-2 border-2 border-black transform rotate-1">Ouder 2</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block font-bold mb-1">Bruto Salaris (Basis 40u)</label>
-                            <input type="number" v-model.number="parent2.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-cyan-50" placeholder="e.g. 4000">
+                            <label class="block font-bold mb-1 text-sm md:text-base">Bruto Salaris (Basis 40u)</label>
+                            <input type="number" v-model.number="parent2.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-cyan-50 text-lg" placeholder="e.g. 4000">
                         </div>
                         <div class="bg-cyan-50 p-2 border border-black text-sm italic">
                             <span class="font-bold">→ Werkelijk Bruto:</span> € {{ formatMoney(getActualSalary(parent2)) }}
                         </div>
 
-                        <div class="flex items-center gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="parent2.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black">
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer p-1">
+                                <input type="checkbox" v-model="parent2.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black rounded-none">
                                 <span class="font-bold">8% Vakantiegeld</span>
                             </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="parent2.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black">
+                            <label class="flex items-center gap-2 cursor-pointer p-1">
+                                <input type="checkbox" v-model="parent2.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black rounded-none">
                                 <span class="font-bold">13e Maand</span>
                             </label>
                         </div>
                         <div>
-                            <label class="block font-bold mb-1">Werkdagen per week</label>
+                            <label class="block font-bold mb-1 text-sm md:text-base">Werkdagen per week</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" v-model.number="parent2.days" min="0" max="5" step="0.5" class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
-                                <input type="number" v-model.number="parent2.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center">
+                                <input type="range" v-model.number="parent2.days" min="0" max="5" step="0.5" class="flex-grow h-8 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
+                                <input type="number" v-model.number="parent2.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center text-lg">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Childcare Settings -->
-                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
-                    <h2 class="text-2xl font-bold mb-4 bg-pink-300 inline-block px-2 border-2 border-black">Kinderopvang</h2>
+                <div class="bg-white p-5 md:p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 bg-pink-300 inline-block px-2 border-2 border-black">Kinderopvang</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block font-bold mb-1">Aantal Kinderen</label>
+                            <label class="block font-bold mb-1 text-sm md:text-base">Aantal Kinderen</label>
                             <div class="flex gap-4">
-                                <button @click="childcare.children = Math.max(0, childcare.children - 1)" class="w-10 h-10 border-2 border-black font-bold hover:bg-red-200">-</button>
-                                <span class="text-2xl font-bold w-8 text-center pt-1">{{ childcare.children }}</span>
-                                <button @click="childcare.children++" class="w-10 h-10 border-2 border-black font-bold hover:bg-green-200">+</button>
+                                <button @click="childcare.children = Math.max(0, childcare.children - 1)" class="w-12 h-12 md:w-10 md:h-10 border-2 border-black font-bold hover:bg-red-200 flex items-center justify-center text-xl active:bg-red-300">-</button>
+                                <span class="text-2xl font-bold w-12 text-center pt-2">{{ childcare.children }}</span>
+                                <button @click="childcare.children++" class="w-12 h-12 md:w-10 md:h-10 border-2 border-black font-bold hover:bg-green-200 flex items-center justify-center text-xl active:bg-green-300">+</button>
                             </div>
                         </div>
                         <div>
-                            <label class="block font-bold mb-1">Uurtarief (€)</label>
-                            <input type="number" v-model.number="childcare.hourlyRate" step="0.01" class="w-full p-3 border-2 border-black font-mono">
-                            <p class="text-sm mt-1 text-gray-600">Max vergoed 2026: €11.23</p>
+                            <label class="block font-bold mb-1 text-sm md:text-base">Uurtarief (€)</label>
+                            <input type="number" v-model.number="childcare.hourlyRate" step="0.01" class="w-full p-3 border-2 border-black font-mono text-lg">
+                            <p class="text-xs md:text-sm mt-1 text-gray-600">Max vergoed 2026: €11.23</p>
                         </div>
                         
                         <!-- Manual Override of Hours -->
@@ -140,7 +155,7 @@
                             <div v-if="!childcare.hoursOverride">
                                 <label class="block mb-1 text-gray-600">Standaard berekening:</label>
                                 <div class="flex items-center gap-2 mb-2">
-                                    <input type="number" v-model.number="childcare.hoursPerDay" class="w-20 p-2 border border-black" placeholder="10.5">
+                                    <input type="number" v-model.number="childcare.hoursPerDay" class="w-24 p-2 border border-black text-lg" placeholder="10.5">
                                     <span>uur/dag</span>
                                 </div>
                                 <p class="text-xl font-mono font-bold">{{ calculatedTotalMonthlyHours.toFixed(1) }} uur</p>
@@ -151,11 +166,11 @@
 
                             <div v-else>
                                 <label class="block mb-1 text-red-600 font-bold">Handmatige uren (Totaal):</label>
-                                <input type="number" v-model.number="childcare.manualTotalHours" class="w-full p-2 border-2 border-black font-mono bg-yellow-50">
+                                <input type="number" v-model.number="childcare.manualTotalHours" class="w-full p-2 border-2 border-black font-mono bg-yellow-50 text-lg">
                             </div>
 
-                            <label class="flex items-center gap-2 mt-3 cursor-pointer border-t border-gray-300 pt-2">
-                                <input type="checkbox" v-model="childcare.hoursOverride" class="w-4 h-4 border-2 border-black accent-black">
+                            <label class="flex items-center gap-2 mt-4 cursor-pointer border-t border-gray-300 pt-3">
+                                <input type="checkbox" v-model="childcare.hoursOverride" class="w-5 h-5 border-2 border-black accent-black">
                                 <span class="font-bold text-xs uppercase">Handmatig Totaal Uren</span>
                             </label>
                         </div>
@@ -169,15 +184,15 @@
                             
                             <!-- Day Override control -->
                             <div class="mt-2" v-if="!childcare.hoursOverride">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" v-model="childcare.manualOverride" class="w-4 h-4 border-2 border-black accent-black">
+                                <label class="flex items-center gap-2 cursor-pointer pb-2">
+                                    <input type="checkbox" v-model="childcare.manualOverride" class="w-5 h-5 border-2 border-black accent-black">
                                     <span class="font-bold text-xs uppercase">Handmatig dagen</span>
                                 </label>
-                                <div v-if="childcare.manualOverride" class="mt-2">
-                                    <input type="number" v-model.number="childcare.manualDays" step="0.5" min="0" max="7" class="w-20 p-2 border border-black font-mono">
+                                <div v-if="childcare.manualOverride" class="mt-2 mb-2">
+                                    <input type="number" v-model.number="childcare.manualDays" step="0.5" min="0" max="7" class="w-24 p-2 border border-black font-mono text-lg">
                                 </div>
-                                <label class="flex items-center gap-2 mt-2 cursor-pointer" v-if="!childcare.manualOverride">
-                                    <input type="checkbox" v-model="childcare.useGrandma" class="w-4 h-4 border-2 border-black accent-black">
+                                <label class="flex items-center gap-2 mt-2 cursor-pointer pt-1" v-if="!childcare.manualOverride">
+                                    <input type="checkbox" v-model="childcare.useGrandma" class="w-5 h-5 border-2 border-black accent-black">
                                     <span>Oma/Opa dag (1 dag minder)</span>
                                 </label>
                             </div>
@@ -187,20 +202,20 @@
             </div>
 
             <!-- Right Column: Results -->
-            <div class="lg:col-span-8 space-y-8">
+            <div class="lg:col-span-8 space-y-6 md:space-y-8">
                 <!-- Big Metrics -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-black text-white p-6 border-4 border-black shadow-[8px_8px_0px_#888]">
-                        <h3 class="text-xl font-bold uppercase text-gray-400">Netto Gezinsinkomen (Maand)</h3>
-                        <p class="text-4xl md:text-5xl font-mono font-bold mt-2">€ {{ formatMoney(monthlyResults.netTotal) }}</p>
-                        <div class="mt-4 text-sm text-gray-400 grid grid-cols-2 gap-2">
+                    <div class="bg-black text-white p-5 md:p-6 border-4 border-black shadow-[6px_6px_0px_#888] md:shadow-[8px_8px_0px_#888]">
+                        <h3 class="text-lg md:text-xl font-bold uppercase text-gray-400">Netto Gezinsinkomen (Maand)</h3>
+                        <p class="text-3xl md:text-5xl font-mono font-bold mt-2 truncate">€ {{ formatMoney(monthlyResults.netTotal) }}</p>
+                        <div class="mt-4 text-sm text-gray-400 grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
                             <div>Ouder 1: € {{ formatMoney(monthlyResults.netP1) }}</div>
                             <div>Ouder 2: € {{ formatMoney(monthlyResults.netP2) }}</div>
                         </div>
                     </div>
-                    <div class="bg-white p-6 border-4 border-black shadow-[8px_8px_0px_#000]">
-                        <h3 class="text-xl font-bold uppercase text-gray-500">Netto "Overhoudt"</h3>
-                        <p class="text-4xl md:text-5xl font-mono font-bold mt-2" :class="{'text-red-600': monthlyResults.netOverhead < 0, 'text-green-600': monthlyResults.netOverhead > 0}">
+                    <div class="bg-white p-5 md:p-6 border-4 border-black shadow-[6px_6px_0px_#000] md:shadow-[8px_8px_0px_#000]">
+                        <h3 class="text-lg md:text-xl font-bold uppercase text-gray-500">Netto "Overhoudt"</h3>
+                        <p class="text-3xl md:text-5xl font-mono font-bold mt-2 truncate" :class="{'text-red-600': monthlyResults.netOverhead < 0, 'text-green-600': monthlyResults.netOverhead > 0}">
                             € {{ formatMoney(monthlyResults.netOverhead) }}
                         </p>
                         <p class="text-sm font-bold mt-2">Na aftrek netto kinderopvang</p>
@@ -208,36 +223,36 @@
                 </div>
 
                 <!-- Breakdown Table -->
-                <div class="bg-white p-6 border-3 border-black neobrutalism">
-                    <h3 class="text-2xl font-bold mb-6 border-b-2 border-black pb-2">Maandelijkse Specificatie</h3>
-                    <table class="w-full text-left font-mono text-sm md:text-base">
+                <div class="bg-white p-4 md:p-6 border-3 border-black neobrutalism overflow-x-auto">
+                    <h3 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 border-b-2 border-black pb-2">Maandelijkse Specificatie</h3>
+                    <table class="w-full text-left font-mono text-sm md:text-base whitespace-nowrap md:whitespace-normal">
                         <tbody>
                             <tr class="border-b border-gray-200">
-                                <td class="py-2">Bruto Inkomen (Gezamenlijk)</td>
+                                <td class="py-2 pr-4">Bruto Inkomen (Gezamenlijk)</td>
                                 <td class="py-2 text-right font-bold">€ {{ formatMoney(monthlyResults.grossTotal) }}</td>
                             </tr>
                             <tr class="border-b border-gray-200 text-red-600">
-                                <td class="py-2">Belasting & Premies (Box 1)</td>
+                                <td class="py-2 pr-4">Belasting & Premies (Box 1)</td>
                                 <td class="py-2 text-right">- € {{ formatMoney(monthlyResults.taxTotal) }}</td>
                             </tr>
                             <tr class="border-b border-gray-200 text-green-600">
-                                <td class="py-2">Heffingskortingen (Totaal)</td>
+                                <td class="py-2 pr-4">Heffingskortingen (Totaal)</td>
                                 <td class="py-2 text-right">+ € {{ formatMoney(monthlyResults.creditsTotal) }}</td>
                             </tr>
                             <tr class="border-b-4 border-black bg-gray-50 font-bold">
-                                <td class="py-3 pl-2">Netto Inkomen (Voor opvang)</td>
+                                <td class="py-3 pl-2 pr-4">Netto Inkomen (Voor opvang)</td>
                                 <td class="py-3 text-right">€ {{ formatMoney(monthlyResults.netTotal) }}</td>
                             </tr>
                             <tr class="border-b border-gray-200 pt-4">
-                                <td class="py-3 text-red-600">Bruto Kosten Kinderopvang <span class="text-xs text-gray-500">({{ monthlyResults.totalHours.toFixed(1) }} uur)</span></td>
+                                <td class="py-3 pr-4 text-red-600">Bruto Kosten Kinderopvang <span class="text-xs text-gray-500">({{ monthlyResults.totalHours.toFixed(1) }} uur)</span></td>
                                 <td class="py-3 text-right text-red-600">- € {{ formatMoney(monthlyResults.childcareGross) }}</td>
                             </tr>
                             <tr class="border-b border-gray-200 text-green-600">
-                                <td class="py-2">Kinderopvangtoeslag (KOT 2026)</td>
+                                <td class="py-2 pr-4">Kinderopvangtoeslag (KOT 2026)</td>
                                 <td class="py-2 text-right">+ € {{ formatMoney(monthlyResults.kotBenefit) }}</td>
                             </tr>
                             <tr class="border-b border-black font-bold italic text-gray-600">
-                                <td class="py-2 pl-4">→ Netto Kosten Opvang</td>
+                                <td class="py-2 pl-4 pr-4">→ Netto Kosten Opvang</td>
                                 <td class="py-2 text-right">- € {{ formatMoney(monthlyResults.childcareNet) }}</td>
                             </tr>
                         </tbody>
@@ -245,9 +260,9 @@
                 </div>
 
                 <!-- Simulation Insight -->
-                <div class="bg-indigo-100 p-6 border-3 border-black neobrutalism">
-                    <h3 class="text-xl font-bold mb-2">💡 Inzicht</h3>
-                    <p v-if="childcare.children > 0">
+                <div class="bg-indigo-100 p-5 md:p-6 border-3 border-black neobrutalism">
+                    <h3 class="text-lg md:text-xl font-bold mb-2">💡 Inzicht</h3>
+                    <p v-if="childcare.children > 0" class="text-sm md:text-base">
                         Je krijgt <strong>{{ monthlyResults.kotPercentage.toFixed(1) }}%</strong> vergoed over het maximum uurtarief (€11.23).
                         <span v-if="childcare.hourlyRate > 11.23" class="text-red-600 font-bold block mt-1">
                             Let op: Je betaalt € {{ (childcare.hourlyRate - 11.23).toFixed(2) }} per uur zelf bovenop de eigen bijdrage.
@@ -257,7 +272,7 @@
                 </div>
 
                 <!-- Chart -->
-                <div class="bg-white p-4 border-3 border-black h-64">
+                <div class="bg-white p-3 md:p-4 border-3 border-black h-64">
                     <canvas id="resultsChart"></canvas>
                 </div>
             </div>
