@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netto Kinderopvang Calculator 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #f0fdf4; } 
+        .neobrutalism {
+            border: 3px solid #000;
+            box-shadow: 5px 5px 0px #000;
+            transition: all 0.1s ease;
+        }
+        .neobrutalism:active {
+            box-shadow: 0px 0px 0px #000;
+            transform: translate(5px, 5px);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            background: #000;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+        input[type="range"] {
+            accent-color: black; 
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-black bg-emerald-50 max-w-7xl mx-auto">
+    <div id="app">
+        <header class="mb-8 border-b-4 border-black pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl md:text-5xl font-bold uppercase tracking-tight">🇳🇱 Netto Calculator 2026</h1>
+                <p class="text-xl font-medium mt-2">Inkomstenbelasting & Kinderopvangtoeslag</p>
+            </div>
+            <button @click="resetDefaults" class="hidden md:block text-xs font-bold underline hover:text-red-600">Reset Instellingen</button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Inputs -->
+            <div class="lg:col-span-4 space-y-8">
+                
+                <!-- Parent 1 -->
+                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-2xl font-bold mb-4 bg-yellow-300 inline-block px-2 border-2 border-black transform -rotate-1">Ouder 1</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold mb-1">Bruto Salaris (Basis 40u)</label>
+                            <input type="number" v-model.number="parent1.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-yellow-50" placeholder="e.g. 5000">
+                        </div>
+                        <div class="bg-yellow-50 p-2 border border-black text-sm italic">
+                            <span class="font-bold">→ Werkelijk Bruto:</span> € {{ formatMoney(getActualSalary(parent1)) }}
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="parent1.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black">
+                                <span class="font-bold">8% Vakantiegeld</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="parent1.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black">
+                                <span class="font-bold">13e Maand</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Werkdagen per week</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" v-model.number="parent1.days" min="0" max="5" step="0.5" class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
+                                <input type="number" v-model.number="parent1.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parent 2 -->
+                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-2xl font-bold mb-4 bg-cyan-300 inline-block px-2 border-2 border-black transform rotate-1">Ouder 2</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold mb-1">Bruto Salaris (Basis 40u)</label>
+                            <input type="number" v-model.number="parent2.salaryFullTime" class="w-full p-3 border-2 border-black font-mono focus:outline-none focus:bg-cyan-50" placeholder="e.g. 4000">
+                        </div>
+                        <div class="bg-cyan-50 p-2 border border-black text-sm italic">
+                            <span class="font-bold">→ Werkelijk Bruto:</span> € {{ formatMoney(getActualSalary(parent2)) }}
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="parent2.holidayAllowance" class="w-5 h-5 border-2 border-black accent-black">
+                                <span class="font-bold">8% Vakantiegeld</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="parent2.thirteenthMonth" class="w-5 h-5 border-2 border-black accent-black">
+                                <span class="font-bold">13e Maand</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Werkdagen per week</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" v-model.number="parent2.days" min="0" max="5" step="0.5" class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer border border-black">
+                                <input type="number" v-model.number="parent2.days" min="0" max="7" step="0.5" class="w-20 p-2 border-2 border-black font-mono text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Childcare Settings -->
+                <div class="bg-white p-6 neobrutalism rounded-none border-3 border-black">
+                    <h2 class="text-2xl font-bold mb-4 bg-pink-300 inline-block px-2 border-2 border-black">Kinderopvang</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold mb-1">Aantal Kinderen</label>
+                            <div class="flex gap-4">
+                                <button @click="childcare.children = Math.max(0, childcare.children - 1)" class="w-10 h-10 border-2 border-black font-bold hover:bg-red-200">-</button>
+                                <span class="text-2xl font-bold w-8 text-center pt-1">{{ childcare.children }}</span>
+                                <button @click="childcare.children++" class="w-10 h-10 border-2 border-black font-bold hover:bg-green-200">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Uurtarief (€)</label>
+                            <input type="number" v-model.number="childcare.hourlyRate" step="0.01" class="w-full p-3 border-2 border-black font-mono">
+                            <p class="text-sm mt-1 text-gray-600">Max vergoed 2026: €11.23</p>
+                        </div>
+                        
+                        <!-- Manual Override of Hours -->
+                        <div class="bg-gray-100 p-3 border border-black text-sm">
+                            <p class="font-bold mb-2">⏱️ Aantal Uren (Totaal per maand)</p>
+                            
+                            <div v-if="!childcare.hoursOverride">
+                                <label class="block mb-1 text-gray-600">Standaard berekening:</label>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="number" v-model.number="childcare.hoursPerDay" class="w-20 p-2 border border-black" placeholder="10.5">
+                                    <span>uur/dag</span>
+                                </div>
+                                <p class="text-xl font-mono font-bold">{{ calculatedTotalMonthlyHours.toFixed(1) }} uur</p>
+                                <p class="text-xs text-gray-500 italic">
+                                    Gebaseerd op {{ calculatedChildcareDays }} dagen/week × {{ childcare.hoursPerDay }}u × {{ childcare.children }} kind(eren)
+                                </p>
+                            </div>
+
+                            <div v-else>
+                                <label class="block mb-1 text-red-600 font-bold">Handmatige uren (Totaal):</label>
+                                <input type="number" v-model.number="childcare.manualTotalHours" class="w-full p-2 border-2 border-black font-mono bg-yellow-50">
+                            </div>
+
+                            <label class="flex items-center gap-2 mt-3 cursor-pointer border-t border-gray-300 pt-2">
+                                <input type="checkbox" v-model="childcare.hoursOverride" class="w-4 h-4 border-2 border-black accent-black">
+                                <span class="font-bold text-xs uppercase">Handmatig Totaal Uren</span>
+                            </label>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 border border-black text-sm">
+                            <p class="font-bold">📅 Opvangdagen:</p>
+                            <div class="flex items-center gap-2" :class="{'opacity-50': childcare.hoursOverride}">
+                                <span class="text-lg font-bold">{{ calculatedChildcareDays }}</span>
+                                <span>dagen per week</span>
+                            </div>
+                            
+                            <!-- Day Override control -->
+                            <div class="mt-2" v-if="!childcare.hoursOverride">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" v-model="childcare.manualOverride" class="w-4 h-4 border-2 border-black accent-black">
+                                    <span class="font-bold text-xs uppercase">Handmatig dagen</span>
+                                </label>
+                                <div v-if="childcare.manualOverride" class="mt-2">
+                                    <input type="number" v-model.number="childcare.manualDays" step="0.5" min="0" max="7" class="w-20 p-2 border border-black font-mono">
+                                </div>
+                                <label class="flex items-center gap-2 mt-2 cursor-pointer" v-if="!childcare.manualOverride">
+                                    <input type="checkbox" v-model="childcare.useGrandma" class="w-4 h-4 border-2 border-black accent-black">
+                                    <span>Oma/Opa dag (1 dag minder)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="lg:col-span-8 space-y-8">
+                <!-- Big Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-black text-white p-6 border-4 border-black shadow-[8px_8px_0px_#888]">
+                        <h3 class="text-xl font-bold uppercase text-gray-400">Netto Gezinsinkomen (Maand)</h3>
+                        <p class="text-4xl md:text-5xl font-mono font-bold mt-2">€ {{ formatMoney(monthlyResults.netTotal) }}</p>
+                        <div class="mt-4 text-sm text-gray-400 grid grid-cols-2 gap-2">
+                            <div>Ouder 1: € {{ formatMoney(monthlyResults.netP1) }}</div>
+                            <div>Ouder 2: € {{ formatMoney(monthlyResults.netP2) }}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 border-4 border-black shadow-[8px_8px_0px_#000]">
+                        <h3 class="text-xl font-bold uppercase text-gray-500">Netto "Overhoudt"</h3>
+                        <p class="text-4xl md:text-5xl font-mono font-bold mt-2" :class="{'text-red-600': monthlyResults.netOverhead < 0, 'text-green-600': monthlyResults.netOverhead > 0}">
+                            € {{ formatMoney(monthlyResults.netOverhead) }}
+                        </p>
+                        <p class="text-sm font-bold mt-2">Na aftrek netto kinderopvang</p>
+                    </div>
+                </div>
+
+                <!-- Breakdown Table -->
+                <div class="bg-white p-6 border-3 border-black neobrutalism">
+                    <h3 class="text-2xl font-bold mb-6 border-b-2 border-black pb-2">Maandelijkse Specificatie</h3>
+                    <table class="w-full text-left font-mono text-sm md:text-base">
+                        <tbody>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-2">Bruto Inkomen (Gezamenlijk)</td>
+                                <td class="py-2 text-right font-bold">€ {{ formatMoney(monthlyResults.grossTotal) }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 text-red-600">
+                                <td class="py-2">Belasting & Premies (Box 1)</td>
+                                <td class="py-2 text-right">- € {{ formatMoney(monthlyResults.taxTotal) }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 text-green-600">
+                                <td class="py-2">Heffingskortingen (Totaal)</td>
+                                <td class="py-2 text-right">+ € {{ formatMoney(monthlyResults.creditsTotal) }}</td>
+                            </tr>
+                            <tr class="border-b-4 border-black bg-gray-50 font-bold">
+                                <td class="py-3 pl-2">Netto Inkomen (Voor opvang)</td>
+                                <td class="py-3 text-right">€ {{ formatMoney(monthlyResults.netTotal) }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 pt-4">
+                                <td class="py-3 text-red-600">Bruto Kosten Kinderopvang <span class="text-xs text-gray-500">({{ monthlyResults.totalHours.toFixed(1) }} uur)</span></td>
+                                <td class="py-3 text-right text-red-600">- € {{ formatMoney(monthlyResults.childcareGross) }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 text-green-600">
+                                <td class="py-2">Kinderopvangtoeslag (KOT 2026)</td>
+                                <td class="py-2 text-right">+ € {{ formatMoney(monthlyResults.kotBenefit) }}</td>
+                            </tr>
+                            <tr class="border-b border-black font-bold italic text-gray-600">
+                                <td class="py-2 pl-4">→ Netto Kosten Opvang</td>
+                                <td class="py-2 text-right">- € {{ formatMoney(monthlyResults.childcareNet) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Simulation Insight -->
+                <div class="bg-indigo-100 p-6 border-3 border-black neobrutalism">
+                    <h3 class="text-xl font-bold mb-2">💡 Inzicht</h3>
+                    <p v-if="childcare.children > 0">
+                        Je krijgt <strong>{{ monthlyResults.kotPercentage.toFixed(1) }}%</strong> vergoed over het maximum uurtarief (€11.23).
+                        <span v-if="childcare.hourlyRate > 11.23" class="text-red-600 font-bold block mt-1">
+                            Let op: Je betaalt € {{ (childcare.hourlyRate - 11.23).toFixed(2) }} per uur zelf bovenop de eigen bijdrage.
+                        </span>
+                    </p>
+                    <p v-else>Geen kinderen geselecteerd.</p>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white p-4 border-3 border-black h-64">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // --- STATE ---
+                const parent1 = ref({
+                    salaryFullTime: 5000,
+                    holidayAllowance: true,
+                    thirteenthMonth: false,
+                    days: 4
+                });
+
+                const parent2 = ref({
+                    salaryFullTime: 3500,
+                    holidayAllowance: true,
+                    thirteenthMonth: false,
+                    days: 3
+                });
+
+                const childcare = ref({
+                    children: 2,
+                    hourlyRate: 11.50,
+                    hoursPerDay: 10.5,
+                    useGrandma: false,
+                    manualOverride: false,
+                    manualDays: 2,
+                    hoursOverride: false,
+                    manualTotalHours: 191.4
+                });
+
+                // --- 2026 CONSTANTS ---
+                const TAX_BRACKETS_2026 = [
+                    { limit: 38883, rate: 0.3570 },
+                    { limit: 78426, rate: 0.3756 },
+                    { limit: Infinity, rate: 0.4950 }
+                ];
+                const AHK_MAX = 3115;
+                const AHK_START = 29739;
+                const AHK_SLOPE = 0.064;
+                const AK_MAX = 5712;
+                const AK_PEAK_START = 39000;
+                const AK_PHASEOUT_START = 45593;
+                const AK_PHASEOUT_RATE = 0.0651;
+                const KOT_MAX_RATE = 11.23;
+                const KOT_THRESHOLD_MAX = 56412;
+                const KOT_THRESHOLD_MIN = 165658;
+                const KOT_MAX_PCT = 0.96;
+                const KOT_MIN_PCT = 0.365;
+
+                // --- LOCAL STORAGE ---
+                const STORAGE_KEY = 'netto_calculator_2026_data';
+                function loadState() {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            if (data.parent1) parent1.value = { ...parent1.value, ...data.parent1 };
+                            if (data.parent2) parent2.value = { ...parent2.value, ...data.parent2 };
+                            if (data.childcare) childcare.value = { ...childcare.value, ...data.childcare };
+                        } catch (e) { }
+                    }
+                }
+                function saveState() {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        parent1: parent1.value,
+                        parent2: parent2.value,
+                        childcare: childcare.value
+                    }));
+                }
+                function resetDefaults() {
+                    localStorage.removeItem(STORAGE_KEY);
+                    location.reload();
+                }
+
+                // --- LOGIC ---
+                function getActualSalary(parent) {
+                    const days = parent.days || 0;
+                    return parent.salaryFullTime * (days / 5);
+                }
+
+                const calculatedChildcareDays = computed(() => {
+                    if (childcare.value.manualOverride) return childcare.value.manualDays;
+                    const daysOff1 = Math.max(0, 5 - parent1.value.days);
+                    const daysOff2 = Math.max(0, 5 - parent2.value.days);
+                    let daysNeeded = Math.max(0, 5 - daysOff1 - daysOff2);
+                    if (childcare.value.useGrandma) daysNeeded = Math.max(0, daysNeeded - 1);
+                    return parseFloat(daysNeeded.toFixed(1));
+                });
+
+                const calculatedTotalMonthlyHours = computed(() => {
+                    const days = calculatedChildcareDays.value;
+                    if (days <= 0 || childcare.value.children <= 0) return 0;
+                    // Formula: Days * HoursPerDay * 52 / 12 * Children
+                    return (days * childcare.value.hoursPerDay * 52 / 12) * childcare.value.children;
+                });
+
+                function calculateAnnualGross(parent) {
+                    const actualMonthly = getActualSalary(parent);
+                    let factor = 12;
+                    if (parent.holidayAllowance) factor *= 1.08;
+                    if (parent.thirteenthMonth) factor += 1; 
+                    return actualMonthly * factor;
+                }
+
+                function calculateBox1Tax(income) {
+                    let tax = 0;
+                    let remaining = income;
+                    let inBucket = Math.min(remaining, TAX_BRACKETS_2026[0].limit);
+                    tax += inBucket * TAX_BRACKETS_2026[0].rate;
+                    remaining -= inBucket;
+                    if (remaining > 0) {
+                        let span = TAX_BRACKETS_2026[1].limit - TAX_BRACKETS_2026[0].limit;
+                        inBucket = Math.min(remaining, span);
+                        tax += inBucket * TAX_BRACKETS_2026[1].rate;
+                        remaining -= inBucket;
+                    }
+                    if (remaining > 0) tax += remaining * TAX_BRACKETS_2026[2].rate;
+                    return tax;
+                }
+
+                function calculateCredits(income) {
+                    let ahk = AHK_MAX;
+                    if (income > AHK_START) ahk -= (income - AHK_START) * AHK_SLOPE;
+                    ahk = Math.max(0, ahk);
+                    let ak = 0;
+                    if (income < 12000) ak = income * 0.083;
+                    else if (income < AK_PEAK_START) {
+                        ak = 1000 + (income - 12000) * 0.15;
+                        if (ak > AK_MAX) ak = AK_MAX;
+                    } else if (income <= AK_PHASEOUT_START) ak = AK_MAX;
+                    else ak = AK_MAX - (income - AK_PHASEOUT_START) * AK_PHASEOUT_RATE;
+                    ak = Math.max(0, ak);
+                    return ahk + ak;
+                }
+
+                function calculateKOT(householdIncome, totalMonthlyHours, children, hourlyRate) {
+                    // Note: input totalMonthlyHours is TOTAL for all children.
+                    if (children === 0 || totalMonthlyHours <= 0) return { benefit: 0, pct: 0 };
+                    
+                    let pct = KOT_MAX_PCT;
+                    if (householdIncome > KOT_THRESHOLD_MAX) {
+                        if (householdIncome >= KOT_THRESHOLD_MIN) pct = KOT_MIN_PCT;
+                        else {
+                            const range = KOT_THRESHOLD_MIN - KOT_THRESHOLD_MAX;
+                            const current = householdIncome - KOT_THRESHOLD_MAX;
+                            const dropRange = KOT_MAX_PCT - KOT_MIN_PCT;
+                            const fraction = current / range;
+                            pct = KOT_MAX_PCT - (fraction * dropRange);
+                        }
+                    }
+
+                    // Reimbursable Rate Limit
+                    const reimbursableRate = Math.min(hourlyRate, KOT_MAX_RATE);
+                    
+                    // Limit Hours Cap: Max 230 per child/month
+                    // We need to know hours per child. We assume equal split.
+                    const hoursPerChild = totalMonthlyHours / children;
+                    const cappedHoursPerChild = Math.min(230, hoursPerChild);
+                    
+                    // Annualize for calculation (tool uses monthly, but technically we just stick to monthly for display)
+                    const monthlyReimbursableHours = cappedHoursPerChild * children;
+
+                    let totalBenefit = 0;
+                    
+                    // Split children for percentage logic (Child 1 vs Child 2)
+                    // We treat first 1/Children fraction of hours as Child 1, rest as Child 2
+                    // Benefit = (HoursPerChild * Rate * Pct1) + (HoursPerChild * Rate * Pct2) ...
+                    
+                    for (let i = 0; i < children; i++) {
+                        let childPct = pct;
+                        if (i > 0) {
+                            childPct = Math.max(pct + 0.3, 0.95); // 2nd child kicker
+                            if (childPct > 0.96) childPct = 0.96;
+                        }
+                        totalBenefit += (cappedHoursPerChild * reimbursableRate * childPct);
+                    }
+                    
+                    // Convert to pct * 100 for display (of first child)
+                    return { benefit: totalBenefit, pct: pct * 100 }; 
+                }
+
+                const monthlyResults = computed(() => {
+                    const gross1 = calculateAnnualGross(parent1.value);
+                    const gross2 = calculateAnnualGross(parent2.value);
+                    const householdGross = gross1 + gross2;
+                    const tax1 = calculateBox1Tax(gross1);
+                    const tax2 = calculateBox1Tax(gross2);
+                    const credits1 = calculateCredits(gross1);
+                    const credits2 = calculateCredits(gross2);
+                    const net1 = gross1 - tax1 + credits1;
+                    const net2 = gross2 - tax2 + credits2;
+
+                    // Childcare Cost
+                    let totalHours = 0;
+                    if (childcare.value.hoursOverride) {
+                        totalHours = childcare.value.manualTotalHours;
+                    } else {
+                        totalHours = calculatedTotalMonthlyHours.value;
+                        // Put calculated value into manual field for easier switch
+                        childcare.value.manualTotalHours = parseFloat(totalHours.toFixed(1));
+                    }
+
+                    let grossChildcareCost = 0;
+                    let kotBenefit = 0;
+                    let kotPct = 0;
+
+                    if (totalHours > 0 && childcare.value.children > 0) {
+                         grossChildcareCost = totalHours * childcare.value.hourlyRate;
+                         const kot = calculateKOT(householdGross, totalHours, childcare.value.children, childcare.value.hourlyRate);
+                         kotBenefit = kot.benefit;
+                         kotPct = kot.pct;
+                    }
+                    
+                    const netOverhead = (net1 + net2) / 12 - (grossChildcareCost - kotBenefit);
+
+                    return {
+                        grossTotal: householdGross / 12,
+                        taxTotal: (tax1 + tax2) / 12,
+                        creditsTotal: (credits1 + credits2) / 12,
+                        netTotal: (net1 + net2) / 12,
+                        netP1: net1 / 12,
+                        netP2: net2 / 12,
+                        childcareGross: grossChildcareCost,
+                        kotBenefit: kotBenefit,
+                        childcareNet: grossChildcareCost - kotBenefit,
+                        netOverhead: netOverhead,
+                        kotPercentage: kotPct,
+                        totalHours: totalHours
+                    };
+                });
+
+                // Chart Logic
+                let chart = null;
+                const updateChart = () => {
+                    const ctx = document.getElementById('resultsChart');
+                    if (!ctx) return;
+                    const data = monthlyResults.value;
+                    if (chart) chart.destroy();
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Bruto Inkom.', 'Netto', 'Na Opvang'],
+                            datasets: [{
+                                label: 'Gezinsfinanciën (€)',
+                                data: [data.grossTotal, data.netTotal, data.netOverhead],
+                                backgroundColor: ['#e5e7eb', '#000000', '#10b981'],
+                                borderWidth: 2,
+                                borderColor: '#000'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                };
+
+                watch(monthlyResults, updateChart);
+                watch([parent1, parent2, childcare], saveState, { deep: true });
+                onMounted(() => { loadState(); setTimeout(updateChart, 500); });
+
+                return {
+                    parent1, parent2, childcare, monthlyResults,
+                    calculatedChildcareDays, calculatedTotalMonthlyHours,
+                    getActualSalary, resetDefaults,
+                    formatMoney: (v) => v.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
