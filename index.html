@@ -262,13 +262,79 @@
                 <!-- Simulation Insight -->
                 <div class="bg-indigo-100 p-5 md:p-6 border-3 border-black neobrutalism">
                     <h3 class="text-lg md:text-xl font-bold mb-2">💡 Inzicht</h3>
-                    <p v-if="childcare.children > 0" class="text-sm md:text-base">
-                        Je krijgt <strong>{{ monthlyResults.kotPercentage.toFixed(1) }}%</strong> vergoed over het maximum uurtarief (€11.23).
-                        <span v-if="childcare.hourlyRate > 11.23" class="text-red-600 font-bold block mt-1">
-                            Let op: Je betaalt € {{ (childcare.hourlyRate - 11.23).toFixed(2) }} per uur zelf bovenop de eigen bijdrage.
-                        </span>
-                    </p>
+                    <div v-if="childcare.children > 0" class="text-sm md:text-base space-y-2">
+                        <p>
+                            Je krijgt <strong>{{ monthlyResults.kotPercentage.toFixed(1) }}%</strong> vergoed over het maximum uurtarief (€11.23).
+                            <span v-if="childcare.hourlyRate > 11.23" class="text-red-600 font-bold block mt-1">
+                                Let op: Je betaalt € {{ (childcare.hourlyRate - 11.23).toFixed(2) }} per uur zelf bovenop de eigen bijdrage.
+                            </span>
+                        </p>
+                        <div class="border-t border-indigo-200 pt-2 grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="block text-xs uppercase font-bold text-indigo-500">Netto resultaat per uur</span>
+                                <span class="font-mono font-bold">€ {{ formatMoney(insights.effectiveHourlyWage) }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs uppercase font-bold text-indigo-500">Opvang-druk</span>
+                                <span class="font-mono font-bold">{{ insights.childcarePressure.toFixed(1) }}%</span> 
+                                <span class="text-[10px] block text-gray-500 line-clamp-1">(van netto inkomen)</span>
+                            </div>
+                        </div>
+                    </div>
                     <p v-else>Geen kinderen geselecteerd.</p>
+                </div>
+
+                <!-- NEW: Slimme Analyse / Optimalisatie -->
+                <div class="bg-emerald-100 p-5 md:p-6 border-3 border-black neobrutalism">
+                    <h3 class="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+                        🚀 Slimme Analyse
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <p class="text-sm italic text-emerald-800">
+                            "Wat levert het op als we meer of minder gaan werken?"
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Parent 1 Simulation -->
+                            <div class="bg-white p-3 border-2 border-black">
+                                <span class="text-xs font-bold uppercase block mb-2 px-1 bg-yellow-300 inline-block border border-black">Ouder 1</span>
+                                <div class="space-y-2 text-sm" v-if="parent1.days < 5">
+                                    <p class="font-bold">+1 dag werken levert op:</p>
+                                    <div class="flex justify-between items-center font-mono">
+                                        <span class="text-green-600 font-bold">+ € {{ formatMoney(insights.p1PlusDay.extraNet) }}</span>
+                                        <span class="text-xs text-gray-400">Netto p/m</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 h-2 border border-black overflow-hidden mt-1">
+                                        <div class="bg-green-500 h-full" :style="{width: insights.p1PlusDay.efficiency + '%'}"></div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500">Efficiëntie: {{ insights.p1PlusDay.efficiency.toFixed(1) }}% van extra bruto inkomen.</p>
+                                </div>
+                                <p v-else class="text-xs italic text-gray-500">Ouder 1 werkt al full-time.</p>
+                            </div>
+
+                            <!-- Parent 2 Simulation -->
+                            <div class="bg-white p-3 border-2 border-black">
+                                <span class="text-xs font-bold uppercase block mb-2 px-1 bg-cyan-300 inline-block border border-black">Ouder 2</span>
+                                <div class="space-y-2 text-sm" v-if="parent2.days < 5">
+                                    <p class="font-bold">+1 dag werken levert op:</p>
+                                    <div class="flex justify-between items-center font-mono">
+                                        <span class="text-green-600 font-bold">+ € {{ formatMoney(insights.p2PlusDay.extraNet) }}</span>
+                                        <span class="text-xs text-gray-400">Netto p/m</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 h-2 border border-black overflow-hidden mt-1">
+                                        <div class="bg-green-500 h-full" :style="{width: insights.p2PlusDay.efficiency + '%'}"></div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500">Efficiëntie: {{ insights.p2PlusDay.efficiency.toFixed(1) }}% van extra bruto inkomen.</p>
+                                </div>
+                                <p v-else class="text-xs italic text-gray-500">Ouder 2 werkt al full-time.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 p-2 border border-black text-[11px] text-emerald-900">
+                            <strong>Marginale druk:</strong> In Nederland kan extra werken door afbouw van toeslagen en heffingskortingen soms relatief weinig opleveren. De "Efficiëntie" laat zien hoeveel procent van je extra bruto salaris je daadwerkelijk onder de streep overhoudt.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Chart -->
@@ -462,9 +528,25 @@
                 }
 
                 const monthlyResults = computed(() => {
-                    const gross1 = calculateAnnualGross(parent1.value);
-                    const gross2 = calculateAnnualGross(parent2.value);
+                    const res = fullCalculation(
+                        parent1.value.salaryFullTime, parent1.value.days, parent1.value.holidayAllowance, parent1.value.thirteenthMonth,
+                        parent2.value.salaryFullTime, parent2.value.days, parent2.value.holidayAllowance, parent2.value.thirteenthMonth,
+                        childcare.value
+                    );
+                    
+                    // Update manual values for other parts of UI if needed (preserving the side-effect-ish logic)
+                    if (!childcare.value.hoursOverride) {
+                        childcare.value.manualTotalHours = parseFloat(res.totalHours.toFixed(1));
+                    }
+
+                    return res;
+                });
+
+                function fullCalculation(s1FT, d1, h1, t1, s2FT, d2, h2, t2, opvang) {
+                    const gross1 = calculateAnnualGross({ salaryFullTime: s1FT, days: d1, holidayAllowance: h1, thirteenthMonth: t1 });
+                    const gross2 = calculateAnnualGross({ salaryFullTime: s2FT, days: d2, holidayAllowance: h2, thirteenthMonth: t2 });
                     const householdGross = gross1 + gross2;
+                    
                     const tax1 = calculateBox1Tax(gross1);
                     const tax2 = calculateBox1Tax(gross2);
                     const credits1 = calculateCredits(gross1);
@@ -473,30 +555,40 @@
                     const net2 = gross2 - tax2 + credits2;
 
                     // Childcare Cost
-                    let totalHours = 0;
-                    if (childcare.value.hoursOverride) {
-                        totalHours = childcare.value.manualTotalHours;
+                    let daysNeeded = 0;
+                    if (opvang.manualOverride) {
+                        daysNeeded = opvang.manualDays;
                     } else {
-                        totalHours = calculatedTotalMonthlyHours.value;
-                        // Put calculated value into manual field for easier switch
-                        childcare.value.manualTotalHours = parseFloat(totalHours.toFixed(1));
+                        const daysOff1 = Math.max(0, 5 - d1);
+                        const daysOff2 = Math.max(0, 5 - d2);
+                        daysNeeded = Math.max(0, 5 - daysOff1 - daysOff2);
+                        if (opvang.useGrandma) daysNeeded = Math.max(0, daysNeeded - 1);
+                    }
+
+                    let totalHours = 0;
+                    if (opvang.hoursOverride) {
+                        totalHours = opvang.manualTotalHours;
+                    } else {
+                        totalHours = (daysNeeded * opvang.hoursPerDay * 52 / 12) * opvang.children;
                     }
 
                     let grossChildcareCost = 0;
                     let kotBenefit = 0;
                     let kotPct = 0;
-
-                    if (totalHours > 0 && childcare.value.children > 0) {
-                         grossChildcareCost = totalHours * childcare.value.hourlyRate;
-                         const kot = calculateKOT(householdGross, totalHours, childcare.value.children, childcare.value.hourlyRate);
-                         kotBenefit = kot.benefit;
-                         kotPct = kot.pct;
+                    if (totalHours > 0 && opvang.children > 0) {
+                        grossChildcareCost = totalHours * opvang.hourlyRate;
+                        const kot = calculateKOT(householdGross, totalHours, opvang.children, opvang.hourlyRate);
+                        kotBenefit = kot.benefit;
+                        kotPct = kot.pct;
                     }
-                    
-                    const netOverhead = (net1 + net2) / 12 - (grossChildcareCost - kotBenefit);
+
+                    const totalNetIncome = net1 + net2;
+                    const childcareNetCost = grossChildcareCost - kotBenefit;
+                    const netOverhead = (totalNetIncome / 12) - childcareNetCost;
 
                     return {
-                        grossTotal: householdGross / 12,
+                        grossTotalAll: householdGross / 12,
+                        grossTotal: (getActualSalary({salaryFullTime: s1FT, days: d1}) + getActualSalary({salaryFullTime: s2FT, days: d2})),
                         taxTotal: (tax1 + tax2) / 12,
                         creditsTotal: (credits1 + credits2) / 12,
                         netTotal: (net1 + net2) / 12,
@@ -504,10 +596,52 @@
                         netP2: net2 / 12,
                         childcareGross: grossChildcareCost,
                         kotBenefit: kotBenefit,
-                        childcareNet: grossChildcareCost - kotBenefit,
+                        childcareNet: childcareNetCost,
                         netOverhead: netOverhead,
                         kotPercentage: kotPct,
-                        totalHours: totalHours
+                        totalHours: totalHours,
+                        totalWorkHours: (d1 + d2) * 8 * (52 / 12) // Average month work hours
+                    };
+                }
+
+                const insights = computed(() => {
+                    const base = monthlyResults.value;
+                    
+                    // Effective hourly wage: Net Overhead / Total Work Hours
+                    const effectiveHourlyWage = base.totalWorkHours > 0 ? base.netOverhead / base.totalWorkHours : 0;
+                    
+                    // Childcare pressure: Net Childcare Cost / Net Income
+                    const childcarePressure = base.netTotal > 0 ? (base.childcareNet / base.netTotal) * 100 : 0;
+
+                    // Simulation: P1 plus 1 day
+                    const p1Plus = fullCalculation(
+                        parent1.value.salaryFullTime, Math.min(5, parent1.value.days + 1), parent1.value.holidayAllowance, parent1.value.thirteenthMonth,
+                        parent2.value.salaryFullTime, parent2.value.days, parent2.value.holidayAllowance, parent2.value.thirteenthMonth,
+                        childcare.value
+                    );
+                    const p1ExtraGross = (parent1.value.salaryFullTime / 5); // 1 day gross monthly basis
+                    const p1ExtraNet = p1Plus.netOverhead - base.netOverhead;
+                    
+                    // Simulation: P2 plus 1 day
+                    const p2Plus = fullCalculation(
+                        parent1.value.salaryFullTime, parent1.value.days, parent1.value.holidayAllowance, parent1.value.thirteenthMonth,
+                        parent2.value.salaryFullTime, Math.min(5, parent2.value.days + 1), parent2.value.holidayAllowance, parent2.value.thirteenthMonth,
+                        childcare.value
+                    );
+                    const p2ExtraGross = (parent2.value.salaryFullTime / 5);
+                    const p2ExtraNet = p2Plus.netOverhead - base.netOverhead;
+
+                    return {
+                        effectiveHourlyWage,
+                        childcarePressure,
+                        p1PlusDay: {
+                            extraNet: Math.max(0, p1ExtraNet),
+                            efficiency: p1ExtraGross > 0 ? (p1ExtraNet / p1ExtraGross) * 100 : 0
+                        },
+                        p2PlusDay: {
+                            extraNet: Math.max(0, p2ExtraNet),
+                            efficiency: p2ExtraGross > 0 ? (p2ExtraNet / p2ExtraGross) * 100 : 0
+                        }
                     };
                 });
 
@@ -544,7 +678,7 @@
                 onMounted(() => { loadState(); setTimeout(updateChart, 500); });
 
                 return {
-                    parent1, parent2, childcare, monthlyResults,
+                    parent1, parent2, childcare, monthlyResults, insights,
                     calculatedChildcareDays, calculatedTotalMonthlyHours,
                     getActualSalary, resetDefaults,
                     formatMoney: (v) => v.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
